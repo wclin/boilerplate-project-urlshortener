@@ -16,15 +16,16 @@ var DefaultURLShortener = /** @class */ (function () {
             return;
         };
         try {
-            var originalURL = new URL(req.body.original_url);
+            var originalURL = new URL(req.body.url);
             dns_1.lookup(originalURL.hostname, function (err, value) {
                 if (err) {
                     console.log(err);
                     res.status(200).send({ error: 'invalid url' });
                 }
                 else {
-                    urlAddHandler(req.body.short_url, req.body.original_url);
-                    res.status(200).send("OK");
+                    var shortURL = Date.now().toString();
+                    urlAddHandler(shortURL, req.body.url);
+                    res.status(200).send({ original_url: req.body.url, short_url: shortURL });
                 }
             });
         }

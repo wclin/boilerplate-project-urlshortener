@@ -19,14 +19,15 @@ class DefaultURLShortener implements URLShortener {
             return;
         }
         try {
-            let originalURL = new URL(req.body.original_url)
+            let originalURL = new URL(req.body.url)
             lookup(originalURL.hostname, (err, value) => {
                 if(err) {
                     console.log(err)
                     res.status(200).send({error: 'invalid url'})
                 } else {
-                    urlAddHandler(req.body.short_url, req.body.original_url)
-                    res.status(200).send("OK")
+                    let shortURL = Date.now().toString()
+                    urlAddHandler(shortURL, req.body.url)
+                    res.status(200).send({original_url: req.body.url, short_url: shortURL})
                 }
             })
         } catch(err) {
