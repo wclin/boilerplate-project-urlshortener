@@ -2,12 +2,17 @@
 exports.__esModule = true;
 exports.mainShortener = exports.DefaultURLShortener = void 0;
 var dns_1 = require("dns");
+var nodeCache = require("node-cache");
+var cache = new nodeCache({ stdTTL: 60 });
 var DefaultURLShortener = /** @class */ (function () {
     function DefaultURLShortener() {
     }
     DefaultURLShortener.prototype.add = function (req, res) {
         var urlAddHandler = function (key, fullURL) {
             console.log("adding [" + key + "]: " + fullURL);
+            if (!cache.set(key, fullURL)) {
+                console.error("cache set error");
+            }
             return;
         };
         try {
@@ -29,8 +34,13 @@ var DefaultURLShortener = /** @class */ (function () {
         }
     };
     DefaultURLShortener.prototype.redirect = function (req, res) {
-        console.log(req.params.shortURL);
-        res.status(200).redirect("https://freeCodeCamp.org");
+        if (cache.has(req.params.shortURL)) {
+            var fullURL = cache.get(req.params.shortURL);
+            console.log("redirecting to " + fullURL + " ...");
+            res.status(200).redirect(fullURL);
+            return;
+        }
+        res.status(200).send("Not Found");
     };
     return DefaultURLShortener;
 }());

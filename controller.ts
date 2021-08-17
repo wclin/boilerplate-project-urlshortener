@@ -1,15 +1,21 @@
 import { lookup } from "dns";
 import {Request, Response} from "express";
+import * as nodeCache from "node-cache"
 
 export interface URLShortener {
     add(req: Request, res: Response): void;
     redirect(req: Request, res: Response): void;
 }
 
+const cache = new nodeCache({ stdTTL: 60 });
+
 class DefaultURLShortener implements URLShortener {
     add(req: Request, res: Response) {
         const urlAddHandler = (key: string, fullURL: string) => {
             console.log("adding [" + key + "]: " + fullURL)
+            if (!cache.set(key, fullURL)) {
+                console.error("cache set error")
+            }
             return;
         }
         try {
@@ -29,8 +35,13 @@ class DefaultURLShortener implements URLShortener {
         }
     }
     redirect(req: Request, res: Response) {
-      console.log(req.params.shortURL)
-      res.status(200).redirect("https://freeCodeCamp.org")
+        if (cache.has(req.params.shortURL)) {
+            let fullURL:string = cache.get(req.params.shortURL)
+            console.log("redirecting to " + fullURL + " ...")
+            res.status(200).redirect(fullURL)
+            return;
+        }
+        res.status(200).send("Not Found")
     }
 }
 export { DefaultURLShortener };
