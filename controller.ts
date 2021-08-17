@@ -8,6 +8,7 @@ export interface URLShortener {
 }
 
 const cache = new nodeCache({ stdTTL: 60 });
+const validProtocals: string[] = ["http:", "https:"]
 
 class DefaultURLShortener implements URLShortener {
     add(req: Request, res: Response) {
@@ -20,10 +21,12 @@ class DefaultURLShortener implements URLShortener {
         }
         try {
             let originalURL = new URL(req.body.url)
+            if (!validProtocals.includes(originalURL.protocol)) {
+                throw Error("invalid protocal: " + originalURL.protocol)
+            }
             lookup(originalURL.hostname, (err, value) => {
                 if(err) {
-                    console.log(err)
-                    res.status(200).send({error: 'invalid url'})
+                    throw Error(err.message)
                 } else {
                     let shortURL = Date.now().toString()
                     urlAddHandler(shortURL, req.body.url)

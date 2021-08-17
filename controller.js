@@ -4,6 +4,7 @@ exports.mainShortener = exports.DefaultURLShortener = void 0;
 var dns_1 = require("dns");
 var nodeCache = require("node-cache");
 var cache = new nodeCache({ stdTTL: 60 });
+var validProtocals = ["http:", "https:"];
 var DefaultURLShortener = /** @class */ (function () {
     function DefaultURLShortener() {
     }
@@ -17,10 +18,12 @@ var DefaultURLShortener = /** @class */ (function () {
         };
         try {
             var originalURL = new URL(req.body.url);
+            if (!validProtocals.includes(originalURL.protocol)) {
+                throw Error("invalid protocal: " + originalURL.protocol);
+            }
             dns_1.lookup(originalURL.hostname, function (err, value) {
                 if (err) {
-                    console.log(err);
-                    res.status(200).send({ error: 'invalid url' });
+                    throw Error(err.message);
                 }
                 else {
                     var shortURL = Date.now().toString();
